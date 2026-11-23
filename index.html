@@ -162,9 +162,11 @@ const pick=[]; const MATS={}, FRM={}, LEFT={};
 // 그림은 묶음 페이지로 나뉘어 있고, 가까이 간 묶음만 숨은 프레임으로 불러온다
 const CHURL=c=>'museum-'+c+'.html';
 addEventListener('message',e=>{const m=e.data;if(!m||m.museum!==1)return;if(m.mesh){statue(m);return}const mt=MATS[m.f];if(!mt||mt.map||mt._l)return;mt._l=1;
-  const im=new Image();im.onload=()=>{const t=new THREE.Texture(im);t.encoding=THREE.sRGBEncoding;t.anisotropy=MAXA;t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter;t.needsUpdate=true;
+  const im=new Image();im.onerror=()=>{mt._l=0};im.onload=()=>{const t=new THREE.Texture(im);t.encoding=THREE.sRGBEncoding;t.anisotropy=MAXA;t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter;t.needsUpdate=true;
     mt.map=t;mt.color.set(0xffffff);mt.needsUpdate=true;const c=WORKS.find(w=>w.f===m.f).c;if(--LEFT[c]===0&&FRM[c]){FRM[c].remove();FRM[c]=null}};im.src=m.d});
-function ask(c){if(c in FRM)return;LEFT[c]=WORKS.filter(w=>w.c===c).length;const f=document.createElement('iframe');f.setAttribute('aria-hidden','true');f.style.cssText='position:fixed;left:-9px;top:-9px;width:1px;height:1px;border:0;opacity:0;pointer-events:none';f.src=CHURL(c);document.body.appendChild(f);FRM[c]=f}
+const TRY={};
+function ask(c){if(c in FRM)return;const ws=WORKS.filter(w=>w.c===c);LEFT[c]=ws.filter(w=>!(MATS[w.f]&&MATS[w.f].map)).length;if(ws.length&&!LEFT[c]){FRM[c]=null;return}const n=TRY[c]=(TRY[c]||0)+1;const f=document.createElement('iframe');f.setAttribute('aria-hidden','true');f.style.cssText='position:fixed;left:-9px;top:-9px;width:1px;height:1px;border:0;opacity:0;pointer-events:none';f.src=CHURL(c)+(n>1?(CHURL(c).includes('?')?'&':'?')+'r='+n:'');document.body.appendChild(f);FRM[c]=f;if(ws.length&&n<6)setTimeout(()=>{if(FRM[c]!==f||!LEFT[c])return;f.remove();delete FRM[c];for(const w of ws){const mt=MATS[w.f];if(mt&&!mt.map)mt._l=0}ask(c)},45000*n)}
+addEventListener('online',()=>{for(const c in FRM)if(FRM[c]&&LEFT[c]){FRM[c].remove();delete FRM[c];for(const w of WORKS)if(w.c===c&&MATS[w.f]&&!MATS[w.f].map)MATS[w.f]._l=0;ask(c)}});
 let ENVT=null;const STD={};
 function envTex(){if(ENVT)return ENVT;const es=new THREE.Scene(),B=(c,w,h,x,y,z,rx,ry)=>{const q=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:c,side:THREE.DoubleSide}));q.position.set(x,y,z);q.rotation.set(rx,ry,0);es.add(q)};
   es.add(new THREE.Mesh(new THREE.SphereGeometry(30,24,12),new THREE.MeshBasicMaterial({color:0x8d8a84,side:THREE.BackSide})));
@@ -626,7 +628,7 @@ WORKS.forEach(w=>{const [iw,ih]=SIZE[w.f];w.h=w.w*ih/iw});
 build();
 
 // ── 걷기·감상 ──
-const st={x:13.0,z:39.3,yaw:-0.6,pitch:0.1}; let cur=-1;
+const st={x:-2.6,z:0,yaw:0,pitch:-0.02}; let cur=-1;
 const keys={};
 function valid(x,z){
   const az=Math.abs(z);
